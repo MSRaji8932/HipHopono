@@ -161,7 +161,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-y-auto">
+    <div className="min-h-screen bg-bg">
       <BackgroundPaths />
       <div className="relative z-10 max-w-3xl mx-auto p-8">
         <div className="flex items-center justify-between mb-8">
