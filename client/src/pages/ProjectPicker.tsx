@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { useProject } from '../context/ProjectContext.tsx';
 import { api } from '../lib/api.ts';
 import { BackgroundPaths } from '../components/ui/background-paths.tsx';
+import { FileExplorer } from '../components/FileExplorer.tsx';
 
 interface Project {
   id: string;
@@ -13,23 +14,15 @@ interface Project {
   lastUsedAt: string;
 }
 
-interface DirEntry {
-  name: string;
-  path: string;
-}
-
 export default function ProjectPicker() {
   const { user, logout } = useAuth();
   const { setProject } = useProject();
   const navigate = useNavigate();
 
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
-  const [browsePath, setBrowsePath] = useState('');
-  const [directories, setDirectories] = useState<DirEntry[]>([]);
-  const [customPath, setCustomPath] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [browseLoading, setBrowseLoading] = useState(false);
+  const [fileExplorerOpen, setFileExplorerOpen] = useState(false);
 
   useEffect(() => {
     loadRecent();
@@ -39,26 +32,8 @@ export default function ProjectPicker() {
     try {
       const data = await api.project.recent();
       setRecentProjects(data.projects);
-      if (data.projects.length > 0) {
-        const lastProject = data.projects[0];
-        setBrowsePath(lastProject.absPath);
-      }
     } catch {
       // Ignore
-    }
-  };
-
-  const browse = async (path?: string) => {
-    setBrowseLoading(true);
-    setError('');
-    try {
-      const data = await api.fs.browse(path);
-      setBrowsePath(data.path);
-      setDirectories(data.directories);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setBrowseLoading(false);
     }
   };
 
@@ -73,12 +48,6 @@ export default function ProjectPicker() {
       setError((err as Error).message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const openCustomPath = async () => {
-    if (customPath.trim()) {
-      await openProject(customPath.trim());
     }
   };
 
@@ -140,24 +109,13 @@ export default function ProjectPicker() {
         )}
 
         <div className="mb-6">
-          <h2 className="text-sm font-medium text-text-muted mb-2">Open by path</h2>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customPath}
-              onChange={(e) => setCustomPath(e.target.value)}
-              placeholder="/path/to/your/project"
-              className="flex-1 px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent font-mono text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && openCustomPath()}
-            />
-            <button
-              onClick={openCustomPath}
-              disabled={loading || !customPath.trim()}
-              className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Opening...' : 'Open'}
-            </button>
-          </div>
+          <button
+            onClick={() => setFileExplorerOpen(true)}
+            disabled={loading}
+            className="w-full px-4 py-3 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50"
+          >
+            Browse & Open Project
+          </button>
         </div>
 
         {recentProjects.length > 0 && (
@@ -199,44 +157,14 @@ export default function ProjectPicker() {
             </div>
           </div>
         )}
-
-        <div>
-          <h2 className="text-sm font-medium text-text-muted mb-2">Browse server</h2>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={browsePath}
-              onChange={(e) => setBrowsePath(e.target.value)}
-              placeholder="Browse path..."
-              className="flex-1 px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent font-mono text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && browse(browsePath)}
-            />
-            <button
-              onClick={() => browse(browsePath)}
-              disabled={browseLoading}
-              className="px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded transition-colors disabled:opacity-50"
-            >
-              {browseLoading ? '...' : 'Browse'}
-            </button>
-          </div>
-
-          {directories.length > 0 && (
-            <div className="max-h-64 overflow-y-auto border border-border rounded bg-bg-secondary">
-              {directories.map((dir) => (
-                <button
-                  key={dir.path}
-                  onClick={() => openProject(dir.path)}
-                  className="w-full text-left px-3 py-2 hover:bg-bg-tertiary text-text text-sm font-mono border-b border-border/50 last:border-0"
-                  disabled={loading}
-                >
-                  📁 {dir.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
       </div>
+
+      <FileExplorer
+        isOpen={fileExplorerOpen}
+        onClose={() => setFileExplorerOpen(false)}
+        onSelect={openProject}
+      />
     </div>
   );
 }
