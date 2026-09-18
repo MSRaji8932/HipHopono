@@ -12,7 +12,8 @@
     "build:client": "cd client && npm run build",
     "start": "cd server && npm start",
     "typecheck": "cd server && npx tsc --noEmit; cd ../client && npx tsc --noEmit",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "i": "npm install && cd server && npm install && cd ../client && npm install"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
