@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
+import { useToast } from '../components/ui/toast.tsx';
 import { api } from '../lib/api.ts';
 
 export default function Settings() {
   const { settings, updateSettings, refreshSettings } = useSettings();
   const { user, changePassword, logout } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const [providerLabel, setProviderLabel] = useState('');
@@ -72,10 +74,13 @@ export default function Settings() {
       if (apiToken) {
         await api.settings.update({ apiToken });
       }
+      addToast('success', 'Settings saved successfully!');
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      setError((err as Error).message);
+      const message = (err as Error).message;
+      setError(message);
+      addToast('error', message);
     } finally {
       setSaving(false);
     }
@@ -105,8 +110,15 @@ export default function Settings() {
       }
       const result = await api.settings.testConnection();
       setTestResult(result);
+      if (result.ok) {
+        addToast('success', 'API connection successful!');
+      } else {
+        addToast('error', result.error || 'Connection failed');
+      }
     } catch (err) {
-      setTestResult({ ok: false, error: (err as Error).message });
+      const message = (err as Error).message;
+      setTestResult({ ok: false, error: message });
+      addToast('error', message);
     } finally {
       setTesting(false);
     }
@@ -118,9 +130,10 @@ export default function Settings() {
       await changePassword(currentPassword, newPassword);
       setCurrentPassword('');
       setNewPassword('');
-      alert('Password changed successfully');
+      addToast('success', 'Password changed successfully!');
     } catch (err) {
-      alert((err as Error).message);
+      const message = (err as Error).message;
+      addToast('error', message);
     }
   };
 
@@ -134,19 +147,15 @@ export default function Settings() {
     setResetting(true);
     try {
       const result = await api.settings.reset() as { username: string; password: string };
-      alert(
-        `RESET COMPLETE\n\n` +
-        `New Credentials:\n` +
-        `Username: ${result.username}\n` +
-        `Password: ${result.password}\n\n` +
-        `Credentials saved to: database/RESET_CREDENTIALS_*.txt\n\n` +
-        `You will be redirected to login.`
-      );
-      // Clear all local state and redirect
-      window.location.href = '/login';
+      addToast('warning', `Reset complete! New credentials: ${result.username} / ${result.password}`);
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
     } catch (err) {
-      // Even if request fails (session invalid), redirect to login
-      window.location.href = '/login';
+      addToast('error', 'Reset failed. Redirecting to login...');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
     }
   };
 
