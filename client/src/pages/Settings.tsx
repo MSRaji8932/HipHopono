@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useToast } from '../components/ui/toast.tsx';
+import { BackgroundPaths } from '../components/ui/background-paths.tsx';
 import { api } from '../lib/api.ts';
 
 export default function Settings() {
@@ -160,8 +161,9 @@ export default function Settings() {
   };
 
   return (
-    <div className="h-screen overflow-y-auto bg-bg">
-      <div className="max-w-3xl mx-auto p-8">
+    <div className="relative min-h-screen overflow-y-auto">
+      <BackgroundPaths />
+      <div className="relative z-10 max-w-3xl mx-auto p-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-text-bright">Settings</h1>
           <button
