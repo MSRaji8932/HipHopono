@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  hiphopono:
+    build: .
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./database:/app/database
+      - /home:/home:ro
+      - /root:/root:ro
+    environment:
+      - PORT=3001
+      - SESSION_SECRET=change-me-in-production
+      - WEbCODE_ALLOWED_ROOTS=/home
+      - DATA_DIR=./database
+    restart: unless-stopped
