@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 
 interface ModernSignInProps {
@@ -24,22 +23,12 @@ export default function ModernSignIn({ onLogin, error, loading }: ModernSignInPr
 
   return (
     <div className="w-full flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <div className="bg-bg-secondary border border-border rounded-2xl p-8 shadow-xl">
+      <div className="w-full max-w-md">
+        <div className="bg-bg-secondary/80 backdrop-blur-sm border border-border rounded-2xl p-8 shadow-xl">
           <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center"
-            >
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
               <span className="text-2xl font-bold text-accent">H</span>
-            </motion.div>
+            </div>
             <h1 className="text-2xl font-bold text-text-bright">Welcome back</h1>
             <p className="text-text-muted mt-2">Sign in to HipHopono</p>
           </div>
@@ -83,20 +72,14 @@ export default function ModernSignIn({ onLogin, error, loading }: ModernSignInPr
             </div>
 
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-danger/10 border border-danger/20 rounded-lg"
-              >
+              <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg">
                 <p className="text-sm text-danger">{error}</p>
-              </motion.div>
+              </div>
             )}
 
-            <motion.button
+            <button
               type="submit"
               disabled={loading || !username || !password}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               className="w-full py-3 px-4 bg-accent hover:bg-accent-hover text-bg font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
@@ -107,10 +90,10 @@ export default function ModernSignIn({ onLogin, error, loading }: ModernSignInPr
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
-            </motion.button>
+            </button>
           </form>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

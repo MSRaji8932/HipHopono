@@ -3,42 +3,36 @@
 import { motion } from "framer-motion";
 
 function FloatingPaths({ position }: { position: number }) {
-  const paths = Array.from({ length: 36 }, (_, i) => ({
+  const paths = Array.from({ length: 12 }, (_, i) => ({
     id: i,
-    d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
-      380 - i * 5 * position
-    } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
-      152 - i * 5 * position
-    } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
-      684 - i * 5 * position
-    } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-    color: `rgba(88, 166, 255,${0.1 + i * 0.03})`,
-    width: 0.5 + i * 0.03,
+    d: `M-${380 - i * 15 * position} -${189 + i * 18}C-${
+      380 - i * 15 * position
+    } -${189 + i * 18} -${312 - i * 15 * position} ${216 - i * 18} ${
+      152 - i * 15 * position
+    } ${343 - i * 18}C${616 - i * 15 * position} ${470 - i * 18} ${
+      684 - i * 15 * position
+    } ${875 - i * 18} ${684 - i * 15 * position} ${875 - i * 18}`,
+    width: 0.5 + i * 0.1,
   }));
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      <svg
-        className="w-full h-full"
-        viewBox="0 0 696 316"
-        fill="none"
-      >
-        <title>Background Paths</title>
+      <svg className="w-full h-full" viewBox="0 0 696 316" fill="none">
         {paths.map((path) => (
           <motion.path
             key={path.id}
             d={path.d}
             stroke="#58a6ff"
             strokeWidth={path.width}
-            strokeOpacity={0.1 + path.id * 0.03}
-            initial={{ pathLength: 0.3, opacity: 0.6 }}
+            strokeOpacity={0.08}
+            initial={{ pathLength: 0.3, opacity: 0.4 }}
             animate={{
               pathLength: 1,
-              opacity: [0.3, 0.6, 0.3],
+              opacity: [0.2, 0.4, 0.2],
               pathOffset: [0, 1, 0],
             }}
             transition={{
-              duration: 20 + Math.random() * 10,
+              duration: 25,
               repeat: Number.POSITIVE_INFINITY,
               ease: "linear",
             }}
@@ -51,11 +45,9 @@ function FloatingPaths({ position }: { position: number }) {
 
 export function BackgroundPaths() {
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-bg">
-      <div className="absolute inset-0">
-        <FloatingPaths position={1} />
-        <FloatingPaths position={-1} />
-      </div>
+    <div className="absolute inset-0 overflow-hidden">
+      <FloatingPaths position={1} />
+      <FloatingPaths position={-1} />
     </div>
   );
 }
