@@ -4,3 +4,4 @@ database/
 .env
 *.log
 .DS_Store
+.prompt
