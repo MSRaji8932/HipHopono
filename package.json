@@ -11,6 +11,7 @@
     "build:server": "cd server && npm run build",
     "build:client": "cd client && npm run build",
     "start": "cd server && npm start",
+    "reset": "cd server && npm run reset",
     "typecheck": "cd server && npx tsc --noEmit; cd ../client && npx tsc --noEmit",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "i": "npm install && cd server && npm install && cd ../client && npm install"
