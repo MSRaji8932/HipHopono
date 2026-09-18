@@ -46,6 +46,7 @@ export const api = {
     update: (settings: Record<string, unknown>) =>
       request('/settings', { method: 'PUT', body: JSON.stringify(settings) }),
     testConnection: () => request<{ ok: boolean; error?: string }>('/settings/test-connection', { method: 'POST' }),
+    reset: () => request('/settings/reset', { method: 'POST' }),
   },
 
   fs: {

@@ -175,4 +175,26 @@ router.post('/test-connection', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+router.post('/reset', requireAuth, async (req: AuthRequest, res) => {
+  const db = getDb();
+  db.settings[req.userId!] = {
+    providerLabel: 'OpenAI',
+    modelName: 'gpt-4o',
+    apiBaseUrl: 'https://api.openai.com/v1',
+    apiToken: '',
+    apiFormat: 'openai',
+    temperature: 0.2,
+    maxTokens: 8192,
+    systemPrompt: `You are HipHopono, an AI coding assistant. You help users write, debug, and understand code. You can read and write files, run commands, and interact with git. Always explain what you're doing and ask for approval before making changes.`,
+    autoApproveReads: true,
+    autoApproveWrites: false,
+    autoApproveCommands: false,
+    commandTimeoutMs: 30000,
+    theme: 'dark',
+    customHeaders: {},
+  };
+  await saveDb(db);
+  res.json({ ok: true });
+});
+
 export { router as settingsRoutes };

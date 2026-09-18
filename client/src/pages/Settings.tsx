@@ -49,6 +49,7 @@ export default function Settings() {
   const [testResult, setTestResult] = useState<{ ok: boolean; error?: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
@@ -126,6 +127,21 @@ export default function Settings() {
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const handleReset = async () => {
+    if (!confirm('Reset ALL settings to defaults? This cannot be undone.')) return;
+    setResetting(true);
+    try {
+      await api.settings.reset();
+      await refreshSettings();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
@@ -353,8 +369,15 @@ export default function Settings() {
               {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
             </button>
             <button
+              onClick={handleReset}
+              disabled={resetting}
+              className="px-6 py-2 bg-danger/20 hover:bg-danger/30 text-danger rounded transition-colors text-sm disabled:opacity-50"
+            >
+              {resetting ? 'Resetting...' : 'Reset Full'}
+            </button>
+            <button
               onClick={handleLogout}
-              className="px-6 py-2 bg-danger/20 hover:bg-danger/30 text-danger rounded transition-colors text-sm"
+              className="px-6 py-2 bg-bg-tertiary hover:bg-border text-text rounded transition-colors text-sm"
             >
               Logout
             </button>
