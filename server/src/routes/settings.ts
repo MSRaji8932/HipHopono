@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { getDb, saveDb } from '../db/db.js';
+import { createEmptyDatabase } from '../db/schema.js';
 import { requireAuth, type AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -176,25 +178,25 @@ router.post('/test-connection', requireAuth, async (req: AuthRequest, res) => {
 });
 
 router.post('/reset', requireAuth, async (req: AuthRequest, res) => {
-  const db = getDb();
-  db.settings[req.userId!] = {
-    providerLabel: 'OpenAI',
-    modelName: 'gpt-4o',
-    apiBaseUrl: 'https://api.openai.com/v1',
-    apiToken: '',
-    apiFormat: 'openai',
-    temperature: 0.2,
-    maxTokens: 8192,
-    systemPrompt: `You are HipHopono, an AI coding assistant. You help users write, debug, and understand code. You can read and write files, run commands, and interact with git. Always explain what you're doing and ask for approval before making changes.`,
-    autoApproveReads: true,
-    autoApproveWrites: false,
-    autoApproveCommands: false,
-    commandTimeoutMs: 30000,
-    theme: 'dark',
-    customHeaders: {},
-  };
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const newPassword = Array.from(crypto.randomBytes(16), b => chars[b % chars.length]).join('');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const passwordHash = crypto.scryptSync(newPassword, salt, 64).toString('hex');
+
+  const db = createEmptyDatabase();
+  db.users.push({
+    id: crypto.randomUUID(),
+    username: 'admin',
+    passwordHash,
+    passwordSalt: salt,
+    role: 'admin',
+    mustChangePassword: true,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null,
+  });
+
   await saveDb(db);
-  res.json({ ok: true });
+  res.json({ ok: true, username: 'admin', password: newPassword });
 });
 
 export { router as settingsRoutes };

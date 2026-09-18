@@ -130,13 +130,13 @@ export default function Settings() {
   };
 
   const handleReset = async () => {
-    if (!confirm('Reset ALL settings to defaults? This cannot be undone.')) return;
+    if (!confirm('RESET EVERYTHING?\n\nThis will delete ALL data:\n- All chats & messages\n- All projects\n- All settings\n- Your password\n\nA new admin password will be generated.\n\nThis CANNOT be undone.')) return;
     setResetting(true);
     try {
-      await api.settings.reset();
-      await refreshSettings();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      const result = await api.settings.reset() as { username: string; password: string };
+      alert(`RESET COMPLETE\n\nNew Credentials:\n\nUsername: ${result.username}\nPassword: ${result.password}\n\nYou will be redirected to login.`);
+      await logout();
+      navigate('/login');
     } catch (err) {
       setError((err as Error).message);
     } finally {
