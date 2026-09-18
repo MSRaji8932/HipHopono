@@ -3,6 +3,7 @@ import { api } from '../lib/api.ts';
 import ToolCallBlock from './ToolCallBlock.tsx';
 import ApprovalModal from './ApprovalModal.tsx';
 import MarkdownRenderer from './MarkdownRenderer.tsx';
+import { Sparkles, Square, ArrowUp, Command } from 'lucide-react';
 
 interface ChatPanelProps {
   conversationId: string;
@@ -59,7 +60,7 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -146,6 +147,9 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
 
     const cmd = input.trim();
     setInput('');
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
     setCommandHistory(prev => [...prev, cmd]);
     setHistoryIndex(-1);
 
@@ -262,26 +266,44 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
     setIsStreaming(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
+    } else if (e.key === 'ArrowUp' && !e.shiftKey && !input.includes('\n')) {
+      // only hijack history when not editing multiline
       if (commandHistory.length > 0) {
+        e.preventDefault();
         const newIndex = historyIndex < commandHistory.length - 1 ? historyIndex + 1 : historyIndex;
         setHistoryIndex(newIndex);
-        setInput(commandHistory[commandHistory.length - 1 - newIndex] || '');
+        const next = commandHistory[commandHistory.length - 1 - newIndex] || '';
+        setInput(next);
+        requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.style.height = 'auto';
+            inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 144) + 'px';
+          }
+        });
       }
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (historyIndex > 0) {
-        const newIndex = historyIndex - 1;
-        setHistoryIndex(newIndex);
-        setInput(commandHistory[commandHistory.length - 1 - newIndex] || '');
-      } else {
-        setHistoryIndex(-1);
-        setInput('');
+    } else if (e.key === 'ArrowDown' && !input.includes('\n')) {
+      if (historyIndex >= 0) {
+        e.preventDefault();
+        if (historyIndex > 0) {
+          const newIndex = historyIndex - 1;
+          setHistoryIndex(newIndex);
+          const next = commandHistory[commandHistory.length - 1 - newIndex] || '';
+          setInput(next);
+          requestAnimationFrame(() => {
+            if (inputRef.current) {
+              inputRef.current.style.height = 'auto';
+              inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 144) + 'px';
+            }
+          });
+        } else {
+          setHistoryIndex(-1);
+          setInput('');
+          if (inputRef.current) inputRef.current.style.height = 'auto';
+        }
       }
     } else if (e.key === 'c' && e.ctrlKey) {
       handleStop();
@@ -352,37 +374,84 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
         )}
       </div>
 
-      {/* Input area */}
-      <div className="border-t border-border p-3 bg-bg-secondary">
-        <div className="flex items-center gap-2">
-          <span className="text-accent font-bold">{'>'}</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a command or message..."
-            className="flex-1 bg-transparent text-text focus:outline-none text-sm font-mono placeholder-text-muted"
-            disabled={isStreaming}
-            autoFocus
-          />
-          {isStreaming ? (
-            <button
-              onClick={handleStop}
-              className="px-3 py-1 bg-danger/20 hover:bg-danger/30 text-danger rounded text-xs"
-            >
-              [stop]
-            </button>
-          ) : (
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim()}
-              className="px-3 py-1 bg-accent/20 hover:bg-accent/30 text-accent rounded text-xs disabled:opacity-30"
-            >
-              [send]
-            </button>
-          )}
+      {/* Modern Composer */}
+      <div className="border-t border-border/60 bg-bg-secondary/60 backdrop-blur-xl p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative group">
+            {/* soft glow on focus */}
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-accent/20 via-accent/5 to-accent/20 rounded-[18px] blur-[6px] opacity-0 group-focus-within:opacity-100 transition duration-500 pointer-events-none" />
+            <div className="relative flex items-end gap-3 bg-bg-tertiary/90 border border-border group-focus-within:border-accent/25 rounded-2xl px-3.5 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.04)] group-focus-within:shadow-[0_8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(88,166,255,0.12)] transition-all duration-300">
+              {/* leading spark */}
+              <div className="hidden sm:flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/15 text-accent shrink-0 mb-[2px]">
+                <Sparkles className="w-[15px] h-[15px]" />
+              </div>
+
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // auto-resize
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 144) + 'px';
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything, or type / for commands…"
+                rows={1}
+                className="flex-1 max-h-36 min-h-[24px] bg-transparent text-[14px] leading-6 text-text placeholder:text-text-muted/60 focus:outline-none resize-none py-1.5 font-mono scrollbar-thin"
+                disabled={isStreaming}
+                autoFocus
+                style={{ height: 'auto' }}
+              />
+
+              {/* actions */}
+              <div className="flex items-center gap-2 shrink-0 mb-0.5">
+                {isStreaming ? (
+                  <button
+                    onClick={handleStop}
+                    aria-label="Stop generation"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-danger text-white shadow-[0_2px_10px_rgba(248,81,73,0.35)] hover:bg-danger/90 hover:shadow-[0_4px_16px_rgba(248,81,73,0.45)] active:scale-[0.97] transition-all duration-200"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={sendMessage}
+                    disabled={!input.trim()}
+                    aria-label="Send message"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-accent text-white shadow-[0_2px_10px_rgba(88,166,255,0.35)] hover:bg-accent-hover hover:shadow-[0_4px_16px_rgba(88,166,255,0.45)] active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-accent transition-all duration-200 group/btn"
+                  >
+                    <ArrowUp className="w-4 h-4 stroke-[2.5] group-enabled:group-hover/btn:translate-y-[-1px] transition-transform" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* hints bar */}
+          <div className="flex items-center justify-between mt-2.5 px-1">
+            <div className="flex items-center gap-3 text-[11px] leading-none text-text-muted">
+              <span className="hidden sm:inline-flex items-center gap-1.5">
+                <kbd className="inline-flex items-center justify-center min-w-[18px] h-5 px-1.5 rounded-md bg-bg-tertiary border border-border/80 text-[10px] font-mono text-text-muted shadow-sm">↵</kbd>
+                <span>send</span>
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1.5">
+                <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded-md bg-bg-tertiary border border-border/80 text-[10px] font-mono text-text-muted shadow-sm">Shift ↵</kbd>
+                <span>new line</span>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Command className="w-3 h-3 opacity-70" />
+                <span className="hidden xs:inline">type</span> / for commands
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-text-muted">
+              <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-warning animate-pulse shadow-[0_0_8px_rgba(210,153,34,0.6)]' : 'bg-success shadow-[0_0_6px_rgba(63,185,80,0.5)]'}`} />
+              <span className="hidden sm:inline">{isStreaming ? 'Generating…' : 'Ready'}</span>
+              {!isStreaming && input.length > 0 && (
+                <span className="hidden sm:inline text-text-muted/60">• {input.length} chars</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
