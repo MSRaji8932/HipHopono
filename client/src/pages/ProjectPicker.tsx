@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useProject } from '../context/ProjectContext.tsx';
 import { api } from '../lib/api.ts';
+import { BackgroundPaths } from '../components/ui/background-paths.tsx';
 
 interface Project {
   id: string;
@@ -82,8 +83,10 @@ export default function ProjectPicker() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-bg">
-      <div className="w-full max-w-2xl p-8">
+    <div className="relative min-h-screen">
+      <BackgroundPaths />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-full max-w-2xl p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-text-bright">HipHopono</h1>
@@ -188,6 +191,7 @@ export default function ProjectPicker() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
