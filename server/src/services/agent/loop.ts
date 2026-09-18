@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { type LLMConfig, type LLMMessage, type LLMTool, streamLLM } from '../llm/index.js';
 import { AGENT_TOOLS, executeTool, needsApproval, type ToolResult } from './tools.js';
-import { getDb } from '../../db/db.js';
+import { getDb, saveDb } from '../../db/db.js';
 import type { UserSettings } from '../../db/schema.js';
 
 export interface AgentEvent {
@@ -99,7 +99,6 @@ export async function runAgentLoop(
           createdAt: new Date().toISOString(),
         };
         db.messages.push(assistantMsg);
-        const { saveDb } = await import('../../db/db.js');
         await saveDb(db);
       }
 
@@ -116,6 +115,24 @@ export async function runAgentLoop(
         function: { name: tc.name, arguments: JSON.stringify(tc.args) },
       })),
     });
+
+    const db = getDb();
+    const assistantMsg = {
+      id: uuid(),
+      conversationId,
+      role: 'assistant' as const,
+      content: finalText || '',
+      toolCalls: toolCalls.map(tc => ({
+        id: tc.id,
+        name: tc.name,
+        args: tc.args,
+      })),
+      tokensIn: 0,
+      tokensOut: 0,
+      createdAt: new Date().toISOString(),
+    };
+    db.messages.push(assistantMsg);
+    await saveDb(db);
 
     for (const tc of toolCalls) {
       if (abortSignal?.aborted) break;
@@ -164,6 +181,20 @@ export async function runAgentLoop(
             ok: false,
             output: 'User rejected this action.',
           });
+
+          const rejectDb = getDb();
+          const rejectMsg = {
+            id: uuid(),
+            conversationId,
+            role: 'tool' as const,
+            content: 'User rejected this action.',
+            toolCallId: tc.id,
+            tokensIn: 0,
+            tokensOut: 0,
+            createdAt: new Date().toISOString(),
+          };
+          rejectDb.messages.push(rejectMsg);
+          await saveDb(rejectDb);
           continue;
         }
       }
@@ -182,6 +213,20 @@ export async function runAgentLoop(
         content: result.output,
         tool_call_id: tc.id,
       });
+
+      const resultDb = getDb();
+      const toolMsg = {
+        id: uuid(),
+        conversationId,
+        role: 'tool' as const,
+        content: result.output,
+        toolCallId: tc.id,
+        tokensIn: 0,
+        tokensOut: 0,
+        createdAt: new Date().toISOString(),
+      };
+      resultDb.messages.push(toolMsg);
+      await saveDb(resultDb);
 
       if (result.needsApproval) {
         sendEvent({
