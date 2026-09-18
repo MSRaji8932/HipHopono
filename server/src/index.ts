@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from './env.js';
-import { initDatabase } from './db/db.js';
+import { initDatabase, getDb } from './db/db.js';
 import { seedDatabase } from './db/seed.js';
 import { authRoutes } from './routes/auth.js';
 import { settingsRoutes } from './routes/settings.js';
@@ -14,6 +14,7 @@ import { conversationsRoutes } from './routes/conversations.js';
 import { errorHandler } from './middleware/errors.js';
 
 const app = express();
+let server: ReturnType<typeof app.listen>;
 
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -22,8 +23,35 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
+// Enhanced health check for Docker / monitoring
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  try {
+    const db = getDb();
+    const uptime = process.uptime();
+    const mem = process.memoryUsage();
+
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(uptime),
+      memory: {
+        rss: Math.floor(mem.rss / 1024 / 1024),
+        heapUsed: Math.floor(mem.heapUsed / 1024 / 1024),
+        heapTotal: Math.floor(mem.heapTotal / 1024 / 1024),
+      },
+      database: {
+        users: db.users.length,
+        conversations: db.conversations.length,
+        messages: db.messages.length,
+      },
+      env: {
+        node: process.version,
+        resetEnabled: env.ALLOW_RESET === 'true',
+      },
+    });
+  } catch {
+    res.status(503).json({ status: 'error', message: 'Database not initialized' });
+  }
 });
 
 app.use('/api/auth', authRoutes);
@@ -36,11 +64,32 @@ app.use('/api/conversations', conversationsRoutes);
 
 app.use(errorHandler);
 
+// Graceful shutdown
+function shutdown(signal: string) {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  if (server) {
+    server.close(() => {
+      console.log('Server closed.');
+      process.exit(0);
+    });
+    // Force close after 5 seconds
+    setTimeout(() => {
+      console.error('Forced shutdown after timeout.');
+      process.exit(1);
+    }, 5000);
+  } else {
+    process.exit(0);
+  }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 async function start() {
   await initDatabase();
   const seeded = await seedDatabase();
 
-  app.listen(env.PORT, () => {
+  server = app.listen(env.PORT, () => {
     console.log('');
     console.log('╔══════════════════════════════════════════╗');
     console.log('║       HipHopono - AI Web CLI             ║');

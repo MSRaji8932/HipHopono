@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { env } from '../env.js';
 import { type Database, createEmptyDatabase } from './schema.js';
+import { rotateAuditLogIfNeeded } from '../services/logRotation.js';
 
 const DB_FILE = path.join(env.DATA_DIR_ABS, 'db.json');
 const DB_TMP = DB_FILE + '.tmp';
@@ -30,6 +31,7 @@ export async function saveDb(db: Database): Promise<void> {
   cache = db;
   writeQueue = writeQueue.then(() => atomicWrite(db));
   await writeQueue;
+  rotateAuditLogIfNeeded(); // Non-blocking
 }
 
 async function atomicWrite(db: Database): Promise<void> {
