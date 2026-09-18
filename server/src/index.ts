@@ -91,21 +91,21 @@ async function start() {
 
   server = app.listen(env.PORT, () => {
     console.log('');
-    console.log('╔══════════════════════════════════════════╗');
-    console.log('║       HipHopono - AI Web CLI             ║');
-    console.log('╠══════════════════════════════════════════╣');
-    console.log(`║  Server:  http://localhost:${env.PORT}          ║`);
-    console.log(`║  Client:  http://localhost:5173           ║`);
-    console.log('╠══════════════════════════════════════════╣');
+    console.log('╔═════════════════════════════════════════════╗');
+    console.log('║           HipHopono - AI Web CLI            ║');
+    console.log('╠═════════════════════════════════════════════╣');
+    console.log(`║   Server:  http://localhost:${env.PORT}     ║`);
+    console.log(`║   Client:  http://localhost:5173            ║`);
+    console.log('╠═════════════════════════════════════════════╣');
     if (seeded) {
-      console.log('║  FIRST RUN - Login Credentials:          ║');
-      console.log(`║  Username: ${seeded.username.padEnd(29)}║`);
-      console.log(`║  Password: ${seeded.password.padEnd(29)}║`);
-      console.log('║  (You will be forced to change password) ║');
-    } else {
-      console.log('║  Ready! Open http://localhost:5173        ║');
+      console.log('║  FIRST RUN - Login Credentials:           ║');
+      console.log(`║  Username: ${seeded.username.padEnd(29)}  ║`);
+      console.log(`║  Password: ${seeded.password.padEnd(29)}  ║`);
+      console.log('║ (You will be forced to change password)   ║');
+    } else { 
+      console.log('║   Ready! Open http://localhost:5173       ║');
     }
-    console.log('╚══════════════════════════════════════════╝');
+    console.log('╚═════════════════════════════════════════════╝');
     console.log('');
   });
 }
