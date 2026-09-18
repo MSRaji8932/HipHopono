@@ -111,4 +111,38 @@ router.post('/close', requireAuth, async (req: AuthRequest, res) => {
   res.json({ ok: true });
 });
 
+const renameSchema = z.object({
+  projectId: z.string().min(1),
+  name: z.string().min(1),
+});
+
+router.post('/rename', requireAuth, async (req: AuthRequest, res) => {
+  const parsed = renameSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Invalid input' });
+    return;
+  }
+
+  const db = getDb();
+  const project = db.projects.find(
+    p => p.id === parsed.data.projectId && p.userId === req.userId
+  );
+  if (!project) {
+    res.status(404).json({ error: 'NOT_FOUND', message: 'Project not found' });
+    return;
+  }
+
+  project.name = parsed.data.name;
+  await saveDb(db);
+  res.json({ ok: true });
+});
+
+router.post('/remove', requireAuth, async (req: AuthRequest, res) => {
+  const { projectId } = req.body as { projectId: string };
+  const db = getDb();
+  db.projects = db.projects.filter(p => !(p.id === projectId && p.userId === req.userId));
+  await saveDb(db);
+  res.json({ ok: true });
+});
+
 export { router as projectRoutes };

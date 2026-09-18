@@ -76,6 +76,10 @@ export const api = {
       ),
     close: (projectId: string) =>
       request('/project/close', { method: 'POST', body: JSON.stringify({ projectId }) }),
+    rename: (projectId: string, name: string) =>
+      request('/project/rename', { method: 'POST', body: JSON.stringify({ projectId, name }) }),
+    remove: (projectId: string) =>
+      request('/project/remove', { method: 'POST', body: JSON.stringify({ projectId }) }),
   },
 
   skills: {
