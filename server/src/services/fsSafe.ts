@@ -26,11 +26,23 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
   }
 
   let allowed = false;
-  for (const root of env.ALLOWED_ROOTS) {
-    const rootResolved = path.resolve(root);
-    if (normalized.startsWith(rootResolved)) {
+
+  // Always allow paths within the project root
+  if (projectRoot) {
+    const projResolved = path.resolve(projectRoot);
+    if (normalized.startsWith(projResolved)) {
       allowed = true;
-      break;
+    }
+  }
+
+  // Also check configured allowed roots
+  if (!allowed) {
+    for (const root of env.ALLOWED_ROOTS) {
+      const rootResolved = path.resolve(root);
+      if (normalized.startsWith(rootResolved)) {
+        allowed = true;
+        break;
+      }
     }
   }
 
@@ -50,6 +62,14 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
     if (stat.isSymbolicLink()) {
       const real = await fs.realpath(normalized);
       const realNormalized = path.normalize(real);
+
+      // Always allow symlinks pointing within project root
+      if (projectRoot) {
+        const projResolved = path.resolve(projectRoot);
+        if (realNormalized.startsWith(projResolved)) {
+          return realNormalized;
+        }
+      }
 
       for (const root of env.ALLOWED_ROOTS) {
         const rootResolved = path.resolve(root);
