@@ -35,6 +35,14 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
     }
   }
 
+  // Always allow paths within user's home directory
+  if (!allowed) {
+    const homeDir = os.homedir();
+    if (normalized.startsWith(homeDir)) {
+      allowed = true;
+    }
+  }
+
   // Also check configured allowed roots
   if (!allowed) {
     for (const root of env.ALLOWED_ROOTS) {
@@ -69,6 +77,12 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
         if (realNormalized.startsWith(projResolved)) {
           return realNormalized;
         }
+      }
+
+      // Always allow symlinks pointing within user's home directory
+      const homeDir = os.homedir();
+      if (realNormalized.startsWith(homeDir)) {
+        return realNormalized;
       }
 
       for (const root of env.ALLOWED_ROOTS) {
