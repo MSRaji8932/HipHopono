@@ -1,1 +1,6 @@
-.prompt
+node_modules/
+dist/
+database/
+.env
+*.log
+.DS_Store
