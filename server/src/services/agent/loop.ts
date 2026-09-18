@@ -5,7 +5,7 @@ import { getDb, saveDb } from '../../db/db.js';
 import type { UserSettings } from '../../db/schema.js';
 
 export interface AgentEvent {
-  type: 'text_delta' | 'tool_call' | 'tool_result' | 'approval_request' | 'usage' | 'error' | 'done';
+  type: 'text_delta' | 'tool_call' | 'tool_result' | 'approval_request' | 'usage' | 'error' | 'done' | 'title_update';
   text?: string;
   id?: string;
   name?: string;
@@ -18,6 +18,7 @@ export interface AgentEvent {
   messageId?: string;
   kind?: string;
   detail?: string;
+  title?: string;
 }
 
 export interface ApprovalRequest {

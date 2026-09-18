@@ -72,6 +72,12 @@ export default function Workspace() {
     }
   };
 
+  const handleTitleUpdate = (conversationId: string, title: string) => {
+    setConversations(prev =>
+      prev.map(c => c.id === conversationId ? { ...c, title } : c)
+    );
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -163,6 +169,7 @@ export default function Workspace() {
             <ChatPanel
               conversationId={activeConversation}
               projectId={project?.id || ''}
+              onTitleUpdate={handleTitleUpdate}
             />
           ) : (
             <div className="h-full flex items-center justify-center">
