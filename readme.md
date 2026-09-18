@@ -8,6 +8,7 @@ AI Web CLI lets you open any project folder on your server, chat with an LLM, an
 
 [نسخه فارسی](fa.readme.md)
 
+
 ## ✨ Features
 
 ### 🖥️ Browser Workspace
