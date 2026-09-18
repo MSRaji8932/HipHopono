@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, createContext, useContext } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, AlertTriangle, X, Info } from "lucide-react";
 
 export type ToastType = "success" | "error" | "warning" | "info";
@@ -66,11 +65,9 @@ function ToastContainer({
 }) {
   return (
     <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm">
-      <AnimatePresence>
-        {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
-        ))}
-      </AnimatePresence>
+      {toasts.map((toast) => (
+        <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+      ))}
     </div>
   );
 }
@@ -91,12 +88,8 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 100, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      className={`flex items-center gap-3 p-4 bg-bg-secondary border ${borders[toast.type]} rounded-lg shadow-lg`}
+    <div
+      className={`flex items-center gap-3 p-4 bg-bg-secondary border ${borders[toast.type]} rounded-lg shadow-lg animate-slide-up`}
     >
       {icons[toast.type]}
       <span className="text-sm text-text flex-1">{toast.message}</span>
@@ -106,6 +99,6 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       >
         <X className="w-4 h-4" />
       </button>
-    </motion.div>
+    </div>
   );
 }
