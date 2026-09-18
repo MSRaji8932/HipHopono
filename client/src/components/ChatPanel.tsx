@@ -8,6 +8,7 @@ import { Sparkles, Square, ArrowUp, Command } from 'lucide-react';
 interface ChatPanelProps {
   conversationId: string;
   projectId: string;
+  onTitleUpdate?: (conversationId: string, title: string) => void;
 }
 
 interface Message {
@@ -32,6 +33,7 @@ interface ChatEvent {
   messageId?: string;
   kind?: string;
   detail?: string;
+  title?: string;
 }
 
 interface ApprovalRequest {
@@ -49,7 +51,7 @@ const BUILTIN_COMMANDS = [
   { name: '/history', desc: 'Command history' },
 ];
 
-export default function ChatPanel({ conversationId, projectId }: ChatPanelProps) {
+export default function ChatPanel({ conversationId, projectId, onTitleUpdate }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -227,6 +229,12 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
 
           case 'done':
             if (e.messageId) lastMessageId = e.messageId;
+            break;
+
+          case 'title_update':
+            if (e.title && onTitleUpdate) {
+              onTitleUpdate(conversationId, e.title);
+            }
             break;
         }
       }

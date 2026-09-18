@@ -53,6 +53,15 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     createdAt: new Date().toISOString(),
   };
   db.messages.push(userMsg);
+
+  const messageCount = db.messages.filter(m => m.conversationId === conversationId).length;
+  let newTitle: string | null = null;
+  if (messageCount === 1 && conversation.title === 'New Conversation') {
+    newTitle = content.length > 50 ? content.substring(0, 50).trim() + '...' : content;
+    conversation.title = newTitle;
+    conversation.updatedAt = new Date().toISOString();
+  }
+
   await saveDb(db);
 
   res.writeHead(200, {
@@ -64,6 +73,10 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   const sendEvent = (event: AgentEvent) => {
     res.write(`data: ${JSON.stringify(event)}\n\n`);
   };
+
+  if (newTitle) {
+    sendEvent({ type: 'title_update', title: newTitle, messageId: conversationId } as AgentEvent);
+  }
 
   const abortController = new AbortController();
 
