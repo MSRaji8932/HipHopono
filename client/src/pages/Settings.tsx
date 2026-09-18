@@ -134,13 +134,19 @@ export default function Settings() {
     setResetting(true);
     try {
       const result = await api.settings.reset() as { username: string; password: string };
-      alert(`RESET COMPLETE\n\nNew Credentials:\n\nUsername: ${result.username}\nPassword: ${result.password}\n\nYou will be redirected to login.`);
-      await logout();
-      navigate('/login');
+      alert(
+        `RESET COMPLETE\n\n` +
+        `New Credentials:\n` +
+        `Username: ${result.username}\n` +
+        `Password: ${result.password}\n\n` +
+        `Credentials saved to: database/RESET_CREDENTIALS_*.txt\n\n` +
+        `You will be redirected to login.`
+      );
+      // Clear all local state and redirect
+      window.location.href = '/login';
     } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setResetting(false);
+      // Even if request fails (session invalid), redirect to login
+      window.location.href = '/login';
     }
   };
 

@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
+import fs from 'fs/promises';
+import path from 'path';
 import { getDb, saveDb } from '../db/db.js';
 import { createEmptyDatabase } from '../db/schema.js';
 import { requireAuth, type AuthRequest } from '../middleware/auth.js';
+import { env } from '../env.js';
 
 const router = Router();
 
@@ -184,8 +187,9 @@ router.post('/reset', requireAuth, async (req: AuthRequest, res) => {
   const passwordHash = crypto.scryptSync(newPassword, salt, 64).toString('hex');
 
   const db = createEmptyDatabase();
+  const userId = crypto.randomUUID();
   db.users.push({
-    id: crypto.randomUUID(),
+    id: userId,
     username: 'admin',
     passwordHash,
     passwordSalt: salt,
@@ -196,6 +200,39 @@ router.post('/reset', requireAuth, async (req: AuthRequest, res) => {
   });
 
   await saveDb(db);
+
+  // Export credentials to text file
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const credsContent = [
+    '╔══════════════════════════════════════════╗',
+    '║       HipHopono - Reset Credentials      ║',
+    '╠══════════════════════════════════════════╣',
+    `║  Date: ${new Date().toLocaleString().padEnd(31)}║`,
+    '╠══════════════════════════════════════════╣',
+    `║  Username: admin                         ║`,
+    `║  Password: ${newPassword.padEnd(29)}║`,
+    '╠══════════════════════════════════════════╣',
+    '║  (Forced to change password on login)    ║',
+    '╚══════════════════════════════════════════╝',
+  ].join('\n');
+
+  const credsPath = path.join(env.DATA_DIR_ABS, `RESET_CREDENTIALS_${timestamp}.txt`);
+  await fs.writeFile(credsPath, credsContent, 'utf-8');
+
+  // Clear session cookie
+  res.clearCookie('session');
+
+  // Log to terminal
+  console.log('');
+  console.log('╔══════════════════════════════════════════╗');
+  console.log('║       FACTORY RESET COMPLETE             ║');
+  console.log('╠══════════════════════════════════════════╣');
+  console.log(`║  Username: admin                         ║`);
+  console.log(`║  Password: ${newPassword.padEnd(29)}║`);
+  console.log(`║  File: ${credsPath.split(/[\\/]/).pop()!.padEnd(33)}║`);
+  console.log('╚══════════════════════════════════════════╝');
+  console.log('');
+
   res.json({ ok: true, username: 'admin', password: newPassword });
 });
 
