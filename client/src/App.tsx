@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { ProjectProvider } from './context/ProjectContext.tsx';
 import { SettingsProvider } from './context/SettingsContext.tsx';
+import { ToastProvider } from './components/ui/toast.tsx';
 import Login from './pages/Login.tsx';
 import Workspace from './pages/Workspace.tsx';
 import Settings from './pages/Settings.tsx';
@@ -67,13 +68,15 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <SettingsProvider>
-          <ProjectProvider>
-            <AppRoutes />
-          </ProjectProvider>
-        </SettingsProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <ProjectProvider>
+              <AppRoutes />
+            </ProjectProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

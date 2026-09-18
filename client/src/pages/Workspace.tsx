@@ -6,6 +6,7 @@ import { api } from '../lib/api.ts';
 import Sidebar from '../components/Sidebar.tsx';
 import ChatPanel from '../components/ChatPanel.tsx';
 import FileTree from '../components/FileTree.tsx';
+import Notifications from '../components/ui/notifications.tsx';
 
 export default function Workspace() {
   const { project, setProject } = useProject();
@@ -106,6 +107,12 @@ export default function Workspace() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <Notifications
+            notifications={[
+              { id: 1, type: "success", message: "Server connected", timestamp: "Just now" },
+              { id: 2, type: "message", message: "Welcome to HipHopono", timestamp: "1m ago" },
+            ]}
+          />
           <span className="text-text-muted text-xs">{user?.username}</span>
           <button
             onClick={() => navigate('/setting')}
