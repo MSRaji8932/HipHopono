@@ -53,6 +53,14 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     createdAt: new Date().toISOString(),
   };
   db.messages.push(userMsg);
+
+  const messageCount = db.messages.filter(m => m.conversationId === conversationId).length;
+  if (messageCount === 1 && conversation.title === 'New Conversation') {
+    const title = content.length > 50 ? content.substring(0, 50).trim() + '...' : content;
+    conversation.title = title;
+    conversation.updatedAt = new Date().toISOString();
+  }
+
   await saveDb(db);
 
   res.writeHead(200, {
