@@ -10,6 +10,7 @@ const envSchema = z.object({
   SESSION_SECRET: z.string().default('hiphopono-dev-secret-change-in-production'),
   WEbCODE_ALLOWED_ROOTS: z.string().default(os.homedir()),
   DATA_DIR: z.string().default('./database'),
+  ALLOW_RESET: z.enum(['true', 'false']).default('true'),
 });
 
 const parsed = envSchema.safeParse(process.env);
