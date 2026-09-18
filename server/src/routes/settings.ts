@@ -6,6 +6,8 @@ import path from 'path';
 import { getDb, saveDb } from '../db/db.js';
 import { createEmptyDatabase } from '../db/schema.js';
 import { requireAuth, type AuthRequest } from '../middleware/auth.js';
+import { rateLimitReset } from '../middleware/rateLimit.js';
+import { csrfProtect } from '../middleware/csrf.js';
 import { env } from '../env.js';
 
 const router = Router();
@@ -180,7 +182,13 @@ router.post('/test-connection', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-router.post('/reset', requireAuth, async (req: AuthRequest, res) => {
+router.post('/reset', requireAuth, rateLimitReset, csrfProtect, async (req: AuthRequest, res) => {
+  // Check if reset is allowed
+  if (env.ALLOW_RESET !== 'true') {
+    res.status(403).json({ error: 'RESET_DISABLED', message: 'Factory reset is disabled. Set ALLOW_RESET=true in .env to enable.' });
+    return;
+  }
+
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
   const newPassword = Array.from(crypto.randomBytes(16), b => chars[b % chars.length]).join('');
   const salt = crypto.randomBytes(16).toString('hex');

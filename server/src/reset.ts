@@ -12,7 +12,7 @@ const envSchema = z.object({
 });
 
 const parsed = envSchema.safeParse(process.env);
-const DATA_DIR = path.resolve(parsed.data.DATA_DIR);
+const DATA_DIR = path.resolve(parsed.success ? parsed.data.DATA_DIR : './database');
 
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
